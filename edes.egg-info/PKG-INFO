@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: edes
+Version: 1.0.0
+Summary: Library for designing trapped electron setups
+Author: Andris Huang, Qian Yu
+Keywords: Quantum Information Processing,RF Engineering
+Classifier: Programming Language :: Python :: 3.8
+
+Designing the trapped electron setups

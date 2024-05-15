@@ -1,0 +1,6 @@
+setup.py
+edes.egg-info/PKG-INFO
+edes.egg-info/SOURCES.txt
+edes.egg-info/dependency_links.txt
+edes.egg-info/requires.txt
+edes.egg-info/top_level.txt
