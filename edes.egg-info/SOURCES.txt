@@ -1,3 +1,4 @@
+README.md
 setup.py
 edes.egg-info/PKG-INFO
 edes.egg-info/SOURCES.txt
