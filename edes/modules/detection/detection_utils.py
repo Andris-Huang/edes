@@ -561,6 +561,7 @@ class AnharmonicElectronSetup(DetectionSetup):
                  N_average, m=m, e=e,
                  devices=[],
                  display_progress=False, 
+		         display_averaging=False,
                  name='AnharmonicElectron'):
         """
         The electron coupled to a tank circuit, with a sequence of devices
@@ -608,6 +609,9 @@ class AnharmonicElectronSetup(DetectionSetup):
         display_progress : bool
             Whether to display a progress bar when doing 
             moving average on the signal
+	display_averaging : bool
+	    Whether to display the progress bar when doing the
+	    averaging of all frequency runs
         """
         super().__init__(BW_measurement, Z_measurement, noise_floor, 
                          name=name, n=n, d=d, Q=Q, Z0=Z0, f0=f0, 
@@ -616,7 +620,8 @@ class AnharmonicElectronSetup(DetectionSetup):
                          display_progress=display_progress)
         self.devices = devices
         self.tank_circuit = TankCircuit(Q, Z0, 2*np.pi*f0, T)
-        
+        self.display_averaging = display_averaging
+
     def __call__(self, freq):
         output_ideal_spectrum = np.zeros(np.shape(freq))
         output_real_spectrum = np.zeros(np.shape(freq))
@@ -636,7 +641,7 @@ class AnharmonicElectronSetup(DetectionSetup):
         Pz = sp.stats.norm.pdf((all_fz-fz_0)/delta_fz)
         Pz_norm = Pz / np.sum(Pz)
         
-        for idx in trange(len(all_fz)):
+        for idx in trange(len(all_fz), disable=(not self.display_averaging)):
             fz = all_fz[idx]
             electron = HarmonicElectron(n, d, 2*np.pi*fz, m, e)
             electron_trap = ElectronCoupledToTank(electron, tank_circuit)
