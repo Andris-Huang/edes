@@ -12,6 +12,24 @@ kB = spc.k
 
 
 ########## Plotting functions for laziness ##########
+
+def big_plt_font():
+    """
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 12,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2})
+    """
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 12,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2})
+
+
 def plot(x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.plot(x, y, *args, **kwargs)
     plt.grid(True)
