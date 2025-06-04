@@ -1,17 +1,7 @@
-; Top Design: "multi_stage_matching_lib:tb_electron_damping:schematic"
+; Top Design: "multi_stage_matching_lib:tb_multi_stage_matching:schematic"
 ; Netlisted using Hierarchy Policy: "Standard"
 
-Options ResourceUsage=yes UseNutmegFormat=no EnableOptim=no TopDesignName="multi_stage_matching_lib:tb_electron_damping:schematic" DcopOutputNodeVoltages=yes DcopOutputPinCurrents=yes DcopOutputAllSweepPoints=no DcopOutputDcopType=0
-; Library Name: multi_stage_matching_lib
-; Cell Name: LC_tank
-; View Name: schematic
-define LC_tank ( VDD  VSS ) 
-;parameters 
-L:L1  VDD VSS L=265 nH Noise=yes  
-C:C1  VDD VSS C=2.947 pF 
-R:R1  VDD VSS R=60 kOhm Noise=yes 
-end LC_tank
-
+Options ResourceUsage=yes UseNutmegFormat=no EnableOptim=no TopDesignName="multi_stage_matching_lib:tb_multi_stage_matching:schematic" DcopOutputNodeVoltages=yes DcopOutputPinCurrents=yes DcopOutputAllSweepPoints=no DcopOutputDcopType=0
 ; Library Name: multi_stage_matching_lib
 ; Cell Name: electron_3layer
 ; View Name: schematic
@@ -22,9 +12,27 @@ L:L1  VDD N__2 L=35.5 H Noise=yes
 C:C1  N__2 N__0 C=2.2e-20 F 
 end electron_3layer
 
+; Library Name: multi_stage_matching_lib
+; Cell Name: multi_stage_matching
+; View Name: schematic
+define multi_stage_matching ( VSS  vin  vout ) 
+;parameters 
+#uselib "ckt" , "tf"
+tf:TF1  vin N__10 VSS VSS T=10.00 
+#uselib "ckt" , "tf"
+tf:TF2  N__10 N__18 VSS VSS T=10.00 
+#uselib "ckt" , "tf"
+tf:TF3  N__18 N__14 VSS VSS T=10.00 
+#uselib "ckt" , "tf"
+tf:TF4  N__14 N__19 VSS VSS T=10.00 
+#uselib "ckt" , "tf"
+tf:TF5  N__19 vout VSS VSS T=10.00 
+R:R1  vout VSS R=50 Ohm Noise=yes 
+end multi_stage_matching
+
 electron_3layer:X1  vout vin 
-LC_tank:X2  vout 0 
-AC:AC1 CalcNoise=no SortNoise=0 IncludePortNoise=yes BandwidthForNoise=1 Hz FreqConversion=no UseFiniteDiff=no StatusLevel=2 OutputBudgetIV=no DevOpPtLevel=0 \
+Short:SRC2  vin 0 Mode=0 SaveCurrent=no
+AC:AC1 CalcNoise=yes SortNoise=0 IncludePortNoise=yes BandwidthForNoise=1 Hz FreqConversion=no UseFiniteDiff=no StatusLevel=2 OutputBudgetIV=no DevOpPtLevel=0 \
 SweepVar="freq" SweepPlan="AC1_stim" OutputPlan="AC1_Output" 
 
 SweepPlan: AC1_stim Step=0.1 MHz Center=180 MHz Span=20 MHz 
@@ -51,3 +59,4 @@ OutputPlan:AC1_Output \
 Ve=1e-9
 Ie=1e-12
 I_Source:SRC3  vout 0 Type="I_1Tone" I[1]=Ie Freq[1]=freq    Iac=polar(1,0)*Ie A 
+multi_stage_matching:X2  0 vout N__6 
