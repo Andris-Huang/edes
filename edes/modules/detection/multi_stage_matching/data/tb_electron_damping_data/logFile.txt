@@ -1,0 +1,24 @@
+
+hpeesofsim (*) 610.shp Aug 20 2024, MINT version 5
+    (64-bit windows built: Tue Aug 20, 2024 21:40:41 +0000)
+
+
+***** Simulation started at Tue Jun  3 15:38:16 2025
+      Running on host: "ELECTRON-WINDOWS"
+      In Directory: "C:\Users\electron\edes\edes\modules\detection\multi_stage_matching\data"
+      Process ID: 22840
+
+Warning detected by hpeesofsim during netlist flattening.
+    Inductor `X1.L1' L=35.5 is unusually large.
+
+
+3 spare nodes and 3 spare devices are removed.
+The details can be found in file 'C:\Users\electron\edes\edes\modules\detection\multi_stage_matching\data\tb_electron_damping_data\spare_removal.txt'.
+
+
+AC AC1[1] <multi_stage_matching_lib:tb_electron_damping:schematic>   freq=(170 MHz->190 MHz)
+
+
+Resource usage:
+  Total stopwatch time     =     0.64 seconds.
+

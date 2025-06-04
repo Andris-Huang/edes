@@ -1,0 +1,45 @@
+<ADSWorkspace Revision="4" Version="100">
+    <Workspace Name="">
+        <LibraryDefs Name="lib.defs" />
+        <Library Name="ads_standard_layers" />
+        <Library Name="ads_schematic_layers" />
+        <Library Name="empro_standard_layers" />
+        <Library Name="ads_builtin" />
+        <Library Name="ads_standard_layers_ic" />
+        <Library Name="ads_schematic_layers_ic" />
+        <Library Name="ads_schematic_ports_ic" />
+        <Library Name="ads_rflib" />
+        <Library Name="ads_sources" />
+        <Library Name="ads_simulation" />
+        <Library Name="ads_tlines" />
+        <Library Name="ads_bondwires" />
+        <Library Name="ads_datacmps" />
+        <Library Name="ads_behavioral" />
+        <Library Name="ads_textfonts" />
+        <Library Name="ads_common_cmps" />
+        <Library Name="ads_designs" />
+        <Library Name="ads_pelib" />
+        <Library Name="ads_serdes_ref_channel" />
+        <Library Name="ads_quantum" />
+        <Library Name="Simulation_Sequencing" />
+        <ConfigFile Name="de_sim.cfg" />
+        <ConfigFile Name="hpeesofsim.cfg" />
+        <Preferences Name="layout.prf" />
+        <Preferences Name="schematic.prf" />
+        <Library Name="multi_stage_matching_lib" />
+        <Log Name="search_history.log" />
+        <Cell Name="multi_stage_matching_lib:electron_3layer" />
+        <Cell Name="multi_stage_matching_lib:tb_electron_damping" />
+        <Data_Display Name="tb_electron_damping.dds" />
+        <Log Name="netlist.log" />
+        <Preferences Name="multi_stage_matching_lib_lay.prf" />
+        <Dataset Name="tb_electron_damping.ds" />
+        <Data_Files Name="tb_electron_damping.ds" />
+        <Data_Files Name="tb_electron_damping_data\logFile.txt" />
+        <ConfigFile Name="dds.cfg" />
+        <Cell Name="multi_stage_matching_lib:LC_tank" />
+        <Data_Files Name="tb_electron_damping_data\spare_removal.txt" />
+        <Cell Name="multi_stage_matching_lib:multi_stage_matching" />
+        <Cell Name="multi_stage_matching_lib:tb_multi_stage_matching" />
+    </Workspace>
+</ADSWorkspace>

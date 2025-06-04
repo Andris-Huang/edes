@@ -1,0 +1,16 @@
+#
+# Edit Lock-Stake file. CAUTION: Please do not change.
+#
+# Information about current Edit Lock Owner.
+#
+LockStakeVersion               1.1
+LoginName                      electron
+HostName                       ELECTRON-WINDOWS
+ProcessIdentifier              3912
+ProcessCreationTime_UTC        1748974660
+ProcessCreationTime_Readable   Tue Jun  3 11:17:40 2025 Pacific Daylight Time
+AppIdentifier                  OA File System Design Manager
+OSType                         win32
+ReasonForPlacingEditLock       OpenAccess edit lock
+FilePathUsedToEditLock         C:\Users\electron\edes\edes\modules\detection\multi_stage_matching\multi_stage_matching_lib\multi_stage_matching\schematic\sch.oa.cdslck
+TimeEditLocked                 Tue Jun  3 16:33:15 2025 Pacific Daylight Time

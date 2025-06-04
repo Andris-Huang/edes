@@ -1,0 +1,53 @@
+; Top Design: "multi_stage_matching_lib:tb_electron_damping:schematic"
+; Netlisted using Hierarchy Policy: "Standard"
+
+Options ResourceUsage=yes UseNutmegFormat=no EnableOptim=no TopDesignName="multi_stage_matching_lib:tb_electron_damping:schematic" DcopOutputNodeVoltages=yes DcopOutputPinCurrents=yes DcopOutputAllSweepPoints=no DcopOutputDcopType=0
+; Library Name: multi_stage_matching_lib
+; Cell Name: LC_tank
+; View Name: schematic
+define LC_tank ( VDD  VSS ) 
+;parameters 
+L:L1  VDD VSS L=265 nH Noise=yes  
+C:C1  VDD VSS C=2.947 pF 
+R:R1  VDD VSS R=60 kOhm Noise=yes 
+end LC_tank
+
+; Library Name: multi_stage_matching_lib
+; Cell Name: electron_3layer
+; View Name: schematic
+define electron_3layer ( VDD  VSS ) 
+;parameters 
+R:R1  N__0 VSS R=4.01e7 Ohm Noise=yes 
+L:L1  VDD N__2 L=35.5 H Noise=yes  
+C:C1  N__2 N__0 C=2.2e-20 F 
+end electron_3layer
+
+electron_3layer:X1  vout vin 
+LC_tank:X2  vout 0 
+AC:AC1 CalcNoise=no SortNoise=0 IncludePortNoise=yes BandwidthForNoise=1 Hz FreqConversion=no UseFiniteDiff=no StatusLevel=2 OutputBudgetIV=no DevOpPtLevel=0 \
+SweepVar="freq" SweepPlan="AC1_stim" OutputPlan="AC1_Output" 
+
+SweepPlan: AC1_stim Step=0.1 MHz Center=180 MHz Span=20 MHz 
+
+OutputPlan:AC1_Output \
+      Type="Output" \
+      UseNodeNestLevel=yes \
+      NodeNestLevel=2 \
+      UseEquationNestLevel=yes \
+      EquationNestLevel=2 \
+      UseSavedEquationNestLevel=yes \
+      SavedEquationNestLevel=2 \
+      UseDeviceCurrentNestLevel=no \
+      DeviceCurrentNestLevel=0 \
+      DeviceCurrentDeviceType="All" \
+      DeviceCurrentSymSyntax=yes \
+      UseCurrentNestLevel=yes \
+      CurrentNestLevel=999 \
+      UseDeviceVoltageNestLevel=no \
+      DeviceVoltageNestLevel=0 \
+      DeviceVoltageDeviceType="All"
+
+
+Ve=1e-9
+Ie=1e-12
+I_Source:SRC3  vout 0 Type="I_1Tone" I[1]=Ie Freq[1]=freq    Iac=polar(1,0)*Ie A 

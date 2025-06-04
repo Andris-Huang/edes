@@ -1,0 +1,14 @@
+(nil
+    spare_node_list(3)
+       (
+            "vin"
+            "X1.N__0"
+            "X1.N__2"
+        )
+    spare_inst_list(3)
+       (
+            "X1.C1"
+            "X1.L1"
+            "X1.R1"
+        )
+)
