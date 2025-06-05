@@ -1,4 +1,4 @@
-<ADSWorkspace Revision="4" Version="100">
+<ADSWorkspace Revision="6" Version="100">
     <Workspace Name="">
         <LibraryDefs Name="lib.defs" />
         <Library Name="ads_standard_layers" />
@@ -40,6 +40,10 @@
         <Cell Name="multi_stage_matching_lib:LC_tank" />
         <Data_Files Name="tb_electron_damping_data\spare_removal.txt" />
         <Cell Name="multi_stage_matching_lib:multi_stage_matching" />
-        <Cell Name="multi_stage_matching_lib:tb_multi_stage_matching" />
+        <Dataset Name="tb_multi_stage_matching.ds" />
+        <Data_Files Name="tb_multi_stage_matching.ds" />
+        <Data_Files Name="tb_multi_stage_matching_data\logFile.txt" />
+        <Cell Name="multi_stage_matching_lib:tb_multi_stage_detection" />
+        <Data_Display Name="tb_multi_stage_detection.dds" />
     </Workspace>
 </ADSWorkspace>
