@@ -387,6 +387,8 @@ class HarmonicElectron(Component):
         use electron.l and electron.c to see the value of equivalent
         l and c after initializing
             electron = HarmonicElectron(n, d, omega, m, e)
+        Use electron.get_I(A) to get the image current of given electron(s)
+        at a given motional amplitude A.
         
         Parameters
         ----------
@@ -406,6 +408,15 @@ class HarmonicElectron(Component):
 
     def get_lc(self):
         return self.l, self.c
+
+    def get_I(self, A=None, T=300): 
+        """
+        Get the induced image current at a given motional amplitude A
+        """
+        if A is not None:
+            return self.n*self.e*A*self.omega / self.d
+        else: 
+            return self.n*self.e*np.sqrt(kB*T/self.m) / self.d
 
         
 class TankCircuit(Component):
@@ -438,7 +449,7 @@ class TankCircuit(Component):
         return self.white_noise(f, PSD)
 
         
-class HarmoincElectronCoupledTank(Component):
+class HarmonicElectronCoupledTank(Component):
     def __init__(self, n, d, Q, Z0, omega_0, omega_z, 
                  m=m, e=e, T=4, name='Electron'):
         super().__init__(name=name, n=n, d=d, Q=Q, Z0=Z0,
@@ -516,6 +527,19 @@ class ElectronCoupledToTank(Component):
         
         Zlc = parallel( (Zl+Zc), parallel(ZL, ZC) )
         return Zlc / (Zlc+R)
+
+    def get_coupling_freq(self): 
+        """
+        Return the coupling strength between the electron and tank circuit in units
+        of [Hz].
+        """
+        return self.Electron.e**2 * self.R / (self.Electron.m * self.Electron.d**2) / (2*np.pi)
+
+    def get_cooling_time(self):
+        """
+        Return the cooling time constant in units of [s].
+        """
+        return (self.Electron.m * self.Electron.d**2) / (self.Electron.e**2 * self.R)
 
 
 class Amplifier(Component):
