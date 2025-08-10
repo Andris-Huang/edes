@@ -1,3 +1,0 @@
-INCLUDE $HPEESOF_DIR/oalibs/analog_rf.defs
-DEFINE multi_stage_matching_lib multi_stage_matching_lib
-ASSIGN multi_stage_matching_lib libMode shared

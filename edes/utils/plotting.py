@@ -43,3 +43,28 @@ def plot_ax_errbar(ax, x, y, yerr, xerr=None, *args, xlabel=None, ylabel=None, t
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
+
+def plot_dot_dashed(x, y, *args, c=None, xlabel=None, ylabel=None, title=None, **kwargs):
+    if c is None:
+        p1 = plt.plot(x, y, 'o', *args, **kwargs)[0]
+        plt.plot(x, y, color=p1.get_color(), alpha=0.4, *args, **kwargs)
+    else: 
+        plt.plot(x, y, 'o', *args, color=c, **kwargs)[0]
+        plt.plot(x, y, color=c, alpha=0.4, linewidth=3, *args, **kwargs)
+    plt.grid(True)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+def plot_ax_dot_dashed(ax, x, y, *args, c=None, xlabel=None, ylabel=None, title=None, **kwargs):
+    if c is None:
+        p1 = ax.plot(x, y, 'o', *args, **kwargs)[0]
+        ax.plot(x, y, color=p1.get_color(), alpha=0.4, linewidth=3, *args, **kwargs)
+    else: 
+        ax.plot(x, y, 'o', *args, color=c, **kwargs)[0]
+        ax.plot(x, y, color=c, alpha=0.4, linewidth=3, *args, **kwargs)
+    ax.grid(True)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+ 

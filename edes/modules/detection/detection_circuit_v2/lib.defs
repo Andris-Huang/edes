@@ -1,3 +1,0 @@
-INCLUDE $HPEESOF_DIR/oalibs/analog_rf.defs
-DEFINE detection_circuit_v2_lib detection_circuit_v2_lib
-ASSIGN detection_circuit_v2_lib libMode shared
