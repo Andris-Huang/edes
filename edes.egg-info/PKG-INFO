@@ -19,6 +19,7 @@ Requires-Dist: pyvista
 Requires-Dist: xarray
 Requires-Dist: cvxpy
 Requires-Dist: sympy
+Requires-Dist: resonator_tools@ https://github.com/HaeffnerLab/resonator_tools/tarball/master
 Dynamic: author
 Dynamic: classifier
 Dynamic: description

@@ -12,3 +12,4 @@ pyvista
 xarray
 cvxpy
 sympy
+resonator_tools@ https://github.com/HaeffnerLab/resonator_tools/tarball/master
