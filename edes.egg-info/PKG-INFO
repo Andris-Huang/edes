@@ -15,7 +15,12 @@ Requires-Dist: tqdm
 Requires-Dist: optuna
 Requires-Dist: plotly
 Requires-Dist: scikit-learn
+Requires-Dist: pyvisa
 Requires-Dist: pyvista
+Requires-Dist: pyusb
+Requires-Dist: zeroconf
+Requires-Dist: pyserial
+Requires-Dist: pyvisa-py
 Requires-Dist: xarray
 Requires-Dist: cvxpy
 Requires-Dist: sympy
