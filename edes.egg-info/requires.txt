@@ -8,7 +8,12 @@ tqdm
 optuna
 plotly
 scikit-learn
+pyvisa
 pyvista
+pyusb
+zeroconf
+pyserial
+pyvisa-py
 xarray
 cvxpy
 sympy
