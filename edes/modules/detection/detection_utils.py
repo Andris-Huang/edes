@@ -29,6 +29,18 @@ def big_plt_font():
                          'ytick.labelsize': 15,
                          'errorbar.capsize': 2})
 
+def hollow_plt_font(): 
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 9,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2, 
+                         'lines.marker': 'o', 
+                         'lines.markeredgewidth': 2,
+                         'lines.markerfacecolor': 'none'})
+    
+
 
 def plot(x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.plot(x, y, *args, **kwargs)
@@ -36,6 +48,8 @@ def plot(x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+    if "label" in kwargs: 
+        plt.legend()
 
 def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     ax.plot(x, y, *args, **kwargs)
@@ -43,6 +57,8 @@ def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
+    if "label" in kwargs: 
+        ax.legend()
 
 def plot_errbar(x, y, yerr, xerr=None, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.errorbar(x, y, yerr, xerr=xerr, *args, **kwargs)

@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 import scipy.constants as spc
-import skrf as rf
-from resonator_tools import circuit
 
 base = "e:\\ansys\\resonator_v1"
 def plot_parallel_coord(param_labels, param_values, objective_label, objective_values, 
@@ -155,25 +153,3 @@ def remove_mm(data):
     data = np.array(data)
     data_rm = [i[:-2] for i in data]
     return np.array(data_rm, dtype=np.float64)
-
-def plot_S11_fit(f, complex_data): 
-    port1 = circuit.reflection_port()
-    port1.add_data(f,complex_data)
-    port1.autofit()
-    fit_results = port1.fitresults
-    all_results = []
-    for i in ['fr', 'Qi', 'Qc', 'Ql']: 
-        if i == 'fr':
-            print(f'f0 = {fit_results[i]/1e6:.3f} +- {fit_results[i+"_err"]/1e6:.3f} MHz') 
-            all_results.append(fit_results[i]/1e6)
-        else: 
-            print(f'{i} = {fit_results[i]:.3f} +- {fit_results[i+"_err"]:.3f}')
-            all_results.append(fit_results[i])
-    port1.plotall()
-    return all_results
-
-def read_s2p(s2p_name, sparam='s11', fmin=-1, fmax=1e10): 
-    s2p = rf.Network(s2p_name)
-    f, S_re, S_im = s2p.frequency.f, getattr(s2p,sparam).s_re.flatten(), getattr(s2p,sparam).s_im.flatten()
-    idx = np.where((f > fmin) & (f < fmax))
-    return f[idx], S_re[idx] + 1j * S_im[idx]

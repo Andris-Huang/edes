@@ -1,7 +1,12 @@
 README.md
 setup.py
+edes/__init__.py
 edes.egg-info/PKG-INFO
 edes.egg-info/SOURCES.txt
 edes.egg-info/dependency_links.txt
 edes.egg-info/requires.txt
 edes.egg-info/top_level.txt
+edes/utils/circuits.py
+edes/utils/file_handling.py
+edes/utils/fitting.py
+edes/utils/plotting.py
