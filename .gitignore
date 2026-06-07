@@ -1,6 +1,11 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints
 */__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+*/*/*/*/__pycache__
 .setup_log
 *.egg-info
 */*/.ipynb_checkpoints
+logs
+.vscode

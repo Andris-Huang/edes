@@ -13,7 +13,7 @@ setup(
     version="1.0.0",
     description="Library for designing trapped electron setups",
     long_description=description,
-    author="Andris Huang, Qian Yu",
+    author="Andris Huang, Qian Yu, Baiyi Yu",
     keywords=["Quantum Information Processing", "RF Engineering"],
     packages=find_packages(),
     include_package_data=True,
