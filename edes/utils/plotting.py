@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def big_plt_font():
     """
@@ -44,7 +45,7 @@ def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    if "label" in kwargs: 
+    if "label" in kwargs and kwargs["label"] != None: 
         ax.legend()
 
 def plot_errbar(x, y, yerr, xerr=None, *args, xlabel=None, ylabel=None, title=None, **kwargs):
@@ -93,4 +94,57 @@ def plot_ax_dot_dashed(ax, x, y, *args, c=None, xlabel=None, ylabel=None, title=
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
- 
+
+def generate_signal_timeline(commands):
+    """
+    Generates time (x) and value (y) arrays based on programmable commands.
+    Supported commands:
+      - ('flat', duration, value)
+      - ('linear_sweep', duration, start_value, end_value)
+    """
+    x_data = []
+    y_data = []
+    current_time = 0.0
+    
+    for cmd_type, *args in commands:
+        if cmd_type == 'flat':
+            duration, value = args
+            # Add start and end points for the flat segment
+            x_data.extend([current_time, current_time + duration])
+            y_data.extend([value, value])
+            current_time += duration
+            
+        elif cmd_type == 'linear_sweep':
+            duration, start_val, end_val = args
+            # Generate a dense set of points for a smooth visual sweep (e.g., 100 points)
+            sweep_times = np.linspace(current_time, current_time + duration, 100)
+            sweep_vals = np.linspace(start_val, end_val, 100)
+            
+            x_data.extend(sweep_times.tolist())
+            y_data.extend(sweep_vals.tolist())
+            current_time += duration
+            
+    return x_data, y_data
+
+def plot_generated_timelines(compiled_signals, title=None):
+    num_signals = len(compiled_signals)
+    fig, axes = plt.subplots(num_signals, 1, figsize=(12, 2.2 * num_signals), sharex=True)
+    if num_signals == 1: axes = [axes]
+    
+    for i, (name, (x, y)) in enumerate(compiled_signals.items()):
+        ax = axes[i]
+        ax.plot(x, y, color=f'C{i}', linewidth=2)
+        ax.fill_between(x, y, alpha=0.15, color=f'C{i}')
+        
+        # Dynamically scale Y axis based on data
+        min_y, max_y = min(y), max(y)
+        padding = max(1.0, (max_y - min_y) * 0.1)
+        ax.set_ylim(min_y - padding, max_y + padding)
+        
+        ax.set_ylabel(name, rotation=0, labelpad=40, verticalalignment='center', fontweight='bold')
+        ax.grid(True, linestyle=':', alpha=0.6)
+        
+    plt.xlabel("Time (seconds)")
+    plt.suptitle(title, fontsize=14, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.show()

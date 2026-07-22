@@ -36,6 +36,15 @@ def Vfrac_to_dB(Vfrac):
 def dB_to_Vfrac(dB): 
     return 10**(dB/20) 
 
+def dBm_to_Vp(dBm, R=50):
+    W = dBm_to_W(dBm) 
+    return np.sqrt(2*R*W) 
+
+def Vp_to_dBm(Vp, R=50): 
+    W = Vp**2/2/R 
+    return W_to_dBm(W)
+
+
 def voltage_noise_to_dBm(V, BW_meas=100, Z_meas=50):
     """
     V/sqrt(Hz) to dBm converter

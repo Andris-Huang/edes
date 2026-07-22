@@ -49,6 +49,6 @@ setup(
         "Programming Language :: Python :: 3.11",
     ],
     scripts=[
-        
+        "edes/scripts/beep"
     ],
 )

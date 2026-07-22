@@ -1,0 +1,8 @@
+import subprocess
+
+command = [
+    "/home/electron/miniconda3/envs/e/bin/python", 
+    "-c", 
+    "from edes.utils.utils import beep_VS; beep_VS()"
+]
+subprocess.run(command)

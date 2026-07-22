@@ -7,7 +7,22 @@ import os
 
 
 class Experiment:
-    def __init__(self, config_file, saving_dir=None):
+    """
+    Experiment object to store and load all relevant devices.
+    
+    Functions
+    ---
+    * load_devices()
+        - Load all devices specified in the given config file
+    * load_device(device_name)
+        - Load specific device previously loaded as <device_name>
+    * list_devices()
+        - List all connected devices
+    * close_all()
+        - Close all connections
+    """
+    def __init__(self, config_file, saving_dir=None, log_callback=None):
+        self.log_callback = log_callback if log_callback else print
         self.config = load_lib(f"{edes.__config_folder__}/{config_file}.py")
         if saving_dir is not None:
             self.saving_dir = saving_dir
@@ -26,15 +41,16 @@ class Experiment:
                 device_class = getattr(base, getattr(self.config, device_name)['device'])
                 try:
                     devices[device_name] = device_class(getattr(self.config, device_name)['addr'], 
-                                                **getattr(self.config, device_name).get('params', {}))
+                                                **getattr(self.config, device_name).get('params', {}), log_callback=self.log_callback)
                 except Exception as e:
-                    print(f">>> ERROR initializing device {device_name}: {e}")
+                    self.log_callback(f">>> ERROR initializing device {device_name}: {e}")
         for device_name in devices:
             setattr(self, device_name, devices[device_name])
         return devices
     
     def load_device(self, device_name):
-        
+        if hasattr(self, device_name):
+            getattr(self, device_name).close()
         item = getattr(self.config, device_name)
         if type(item) is dict and "device" in item and "addr" in item:
             device_class = getattr(base, getattr(self.config, device_name)['device'])
@@ -43,7 +59,7 @@ class Experiment:
                               **getattr(self.config, device_name).get('params', {}))
                 setattr(self, device_name, self.devices[device_name])
             except Exception as e:
-                print(f">>> ERROR initializing device {device_name}: {e}")
+                self.log_callback(f">>> ERROR initializing device {device_name}: {e}")
 
     def list_devices(self):
         return list(self.devices.keys())
@@ -53,4 +69,4 @@ class Experiment:
             try:
                 device.close()
             except Exception as e:
-                print(f">>> ERROR closing device: {e}")
+                self.log_callback(f">>> ERROR closing device: {e}")
