@@ -7,6 +7,8 @@ from datetime import datetime, time
 from types import SimpleNamespace
 import h5py
 import fnmatch
+import numpy as np
+import json
 
 def dict_to_obj(data_dict):
     return SimpleNamespace(**data_dict)
@@ -21,7 +23,37 @@ def list_filenames(folder_path):
     except Exception as e:
         print(f"Error: {e}")
         return []
+
+def list_dirnames(dir_path):
+    """Returns a list of subfolder names in the specified directory."""
+    return [
+        entry.name for entry in os.scandir(dir_path) 
+        if entry.is_dir()
+    ]
+
+def get_artiq_event_files(base_dir, artiq_id):
+    # Search target pattern, e.g., "artiq_11143"
+    target_pattern = f"artiq_{artiq_id}"
     
+    # 1. Get subfolder names and find the matching directory
+    subfolders = list_dirnames(base_dir)
+    matched_folder = None
+    
+    for folder in subfolders:
+        if target_pattern in folder:
+            matched_folder = os.path.join(base_dir, folder) if not folder.startswith(base_dir) else folder
+            break
+            
+    if not matched_folder:
+        print(f"No directory found matching ID: {artiq_id}")
+        return []
+    
+    # 2. Get files inside matching folder and filter for "event_"
+    all_files = list_filenames(matched_folder)
+    event_files = [f'{matched_folder}/{f}' for f in all_files if "event_" in f and "mr" not in f]
+    
+    return event_files 
+
 def list_filepaths(folder_path):
     """Return a list of full file paths in the specified folder."""
     try:
@@ -128,32 +160,30 @@ def load_saving_dir():
         return log_path
     
 def load_h5_data(filepath, base=None):
-    """
-    Load data from an HDF5 file and return it as a dictionary.
-
-    Parameters
-    --- 
-    * filepath : [str] 
-        The file name or path. 
-    * base : [str] 
-        The prefix to the filepath if any, default is None.
-    
-    Returns
-    --- 
-    * data : [dict] 
-        The HDF5 file as a dict object.
-    """
+    if base is not None:
+        filepath = os.path.join(base, filepath)
+        
     data = {}
     try:
-        if base is not None:
-            filepath = os.path.join(base, filepath)
         with h5py.File(filepath, 'r') as f:
+            def _read_node(node):
+                if isinstance(node, h5py.Group):
+                    return {k: _read_node(v) for k, v in node.items()}
+                elif isinstance(node, h5py.Dataset):
+                    # Use np.array(node) instead of node[()] to safely load compound types
+                    val = np.array(node)
+                    # If it's a 0-D scalar array, unpack it
+                    return val.item() if val.shape == () else val
+                return None
+
             for key in f.keys():
-                data[key] = f[key][()]
+                data[key] = _read_node(f[key])
+                
     except FileNotFoundError:
         print(f">>> File not found: {filepath}")
     except Exception as e:
         print(f"Error: {e}")
+        
     return data
 
 def update_latest_filename(filename): 
@@ -238,3 +268,21 @@ def convert_dict_to_dataframe(input_dict):
     # df = df[['dBm', 'avg', 'rep', 'data', 'time']]
     
     return df
+
+
+def find_file_by_rid(rid, search_dir, base_dir_to_strip):
+    """Searches for an ARTIQ .h5 file matching the given RID."""
+    target_prefix = f"{int(rid):09d}-"
+    for root, dirs, files in os.walk(search_dir):
+        for file in files:
+            if file.startswith(target_prefix) and file.endswith('.h5'):
+                full_path = os.path.join(root, file)
+                # Strip the home_dir from the start so load_h5_data works correctly with base=home_dir
+                if full_path.startswith(base_dir_to_strip):
+                    return full_path[len(base_dir_to_strip):]
+                return full_path
+    return None
+
+
+def load_artiq_h5_arguments(filename, arg, base=''):
+    return json.loads(load_h5_data(filename, base=base)['expid'])['arguments'][arg]

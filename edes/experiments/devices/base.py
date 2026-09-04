@@ -153,6 +153,37 @@ class Valon(Instrument):
     def close(self):
         self.output_off()
 
+class TestValon: 
+    """
+    Fake Valon object for testing purposes
+    """
+    def __init__(self, address='', name='Valon', freq=1452e6, power=0, log_callback=None):
+        self.log_callback = log_callback if log_callback else print
+        self.log_callback(f">>> Connected to fake Valon")
+
+    def output_on(self):
+        return
+    
+    def output_off(self):
+        return
+    
+    def set_frequency(self, freq_hz):
+        return 
+
+    def set_power(self, power_dbm):
+        return 
+    
+    def set_voltage(self, voltage, R=50, digits=5): 
+        return
+
+    def query(self, command):
+        return
+
+    def write(self, command):
+        return
+    
+    def close(self):
+        self.output_off()
 
 
 class PS350_viaDP832A(Instrument): 
