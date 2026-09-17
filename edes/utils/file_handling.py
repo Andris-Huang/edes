@@ -270,6 +270,109 @@ def convert_dict_to_dataframe(input_dict):
     return df
 
 
+def parse_encoded_number(val):
+    """
+    Cleans sweep string numbers like '_-0p4' or '_-0p09999999999999998'
+    into clean floats like -0.4 and -0.1. Non-numeric strings are returned
+    unchanged; float/int values are rounded the same way for consistency.
+    """
+    if not isinstance(val, str):
+        if isinstance(val, (float, np.floating)):
+            return round(float(val), 6)
+        return val
+
+    s = val.strip().strip('_')
+    candidate = s.replace('p', '.').replace('P', '.')
+
+    try:
+        num = float(candidate)
+        num = round(num, 6)
+        return 0.0 if num == 0.0 else num
+    except ValueError:
+        return val
+
+
+def convert_sweep_dict_to_dataframe(data_dict, var_names=None):
+    """
+    Converts an HDF5 data dictionary from a parameter sweep (e.g. DC-multipole
+    scans) into a structured pandas DataFrame. Handles keys formatted like
+    'data.Ex=10.Ey=-5', 'data.Ex_-0p1.Ey_-0p4' (encoded via parse_encoded_number),
+    or plain positional tokens 'data.10.-5'.
+
+    Not to be confused with :func:`convert_dict_to_dataframe` above, which
+    parses a different, unrelated key schema
+    ('dBm{val}_average{val}_repetition{val}_data|time') used by the lock-in
+    detection pipeline.
+
+    Parameters
+    ----------
+    data_dict : dict
+        Dictionary loaded from HDF5 file.
+    var_names : list of str, optional
+        Custom column names for positional variables.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        DataFrame with dynamic variable columns, 'data', and 'time' (if present).
+    """
+    if var_names is None:
+        for meta_key in ['var_names', 'variables', 'param_names']:
+            if meta_key in data_dict:
+                var_names = list(data_dict[meta_key])
+                break
+
+    time_data = None
+    for t_key in ['time', 't', 't_axis', 'x_axis']:
+        if t_key in data_dict:
+            time_data = data_dict[t_key]
+            break
+
+    records = []
+    datasets_source = data_dict.get('datasets', data_dict)
+
+    for key, value in datasets_source.items():
+        if not isinstance(key, str):
+            continue
+
+        if key.startswith('data.') or key.startswith('data/'):
+            tokens = key.replace('/', '.').split('.')[1:]
+            row = {}
+
+            for idx, token in enumerate(tokens):
+                if '=' in token:
+                    k, v = token.split('=', 1)
+                    row[k] = parse_encoded_number(v)
+                elif '_' in token:
+                    parts = token.split('_', 1)
+                    parsed_val = parse_encoded_number(parts[1])
+                    if isinstance(parsed_val, (int, float)):
+                        row[parts[0]] = parsed_val
+                    else:
+                        col_name = var_names[idx] if (var_names and idx < len(var_names)) else f'var{idx + 1}'
+                        row[col_name] = parse_encoded_number(token)
+                else:
+                    col_name = var_names[idx] if (var_names and idx < len(var_names)) else f'var{idx + 1}'
+                    row[col_name] = parse_encoded_number(token)
+
+            row['data'] = value
+            if time_data is not None:
+                row['time'] = time_data
+
+            records.append(row)
+
+    df = pd.DataFrame(records)
+
+    for col in df.columns:
+        if col not in ['data', 'time']:
+            try:
+                df[col] = pd.to_numeric(df[col].apply(parse_encoded_number))
+            except (ValueError, TypeError):
+                pass
+
+    return df
+
+
 def find_file_by_rid(rid, search_dir, base_dir_to_strip):
     """Searches for an ARTIQ .h5 file matching the given RID."""
     target_prefix = f"{int(rid):09d}-"

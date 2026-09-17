@@ -19,6 +19,22 @@ from IPython.display import display, clear_output
 big_plt_font()
 
 
+def power_in_unit(powers_dBm, unit='nW'):
+    """Convert spectrum-analyser readings (always recorded in dBm) to the unit a
+    plot should display.
+
+    Returns ``(values, axis_label)`` so an axis can be switched between linear
+    power and dBm with a single keyword. ``unit`` is 'nW' or 'dBm'
+    (case-insensitive).
+    """
+    powers_dBm = np.asarray(powers_dBm, dtype=float)
+    if unit.lower() == 'nw':
+        return dBm_to_W(powers_dBm) * 1e9, 'Detected Power (nW)'
+    if unit.lower() == 'dbm':
+        return powers_dBm, 'Detected Power (dBm)'
+    raise ValueError(f"unit must be 'nW' or 'dBm', got {unit!r}")
+
+
 def plot_hist_across_var(tip_on_files, tip_off_files, data_dir, var='t_load', fix_xlim=False):
     """
     Plots histograms of detected power for Tip-On and Tip-Off datasets across a specified variable.
@@ -1107,7 +1123,13 @@ def plot_peak_power_vs_var(tip_on_files, tip_off_files, data_dir, var='t_load',
     plt.legend() 
     plt.show()
 
-def plot_power_by_rid(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=751, tmin=-1, tmax=1e6):
+def plot_power_by_rid(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=751, tmin=-1, tmax=1e6,
+                      unit='nW'):
+    """Plot detected power vs. time for every trace of `rid` above `threshold_nw`.
+
+    `unit` sets the y axis: 'nW' (default) or 'dBm'. The threshold stays in nW
+    either way, so switching units never changes which traces are shown.
+    """
     # 1. Resolve file path using RID
     filename = find_file_by_rid(rid, search_dir, home_dir)
     if filename is None:
@@ -1117,6 +1139,7 @@ def plot_power_by_rid(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=7
     # 2. Load dataset and metadata
     file = load_h5_data(filename, base=home_dir)['datasets']
     SWT = load_artiq_h5_arguments(filename, 'SSA_SWT', base=home_dir)
+    _, ylabel = power_in_unit(0.0, unit)   # validates `unit` before any plotting
     
     all_powers = []
 
@@ -1133,13 +1156,14 @@ def plot_power_by_rid(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=7
                     power_nW = 10**(powers[j]/10) * 1e6
                     
                     if np.max(power_nW) > threshold_nw:
+                        P_plot, _ = power_in_unit(powers[j], unit)
                         t_ax = np.linspace(time_stamp[j], time_stamp[j] + SWT, N_data_SWT)
                         idx = np.where( (t_ax > tmin) & (t_ax < tmax))
                         plot(
                             t_ax[idx], 
-                            power_nW[idx], 
+                            P_plot[idx], 
                             xlabel='Time window (s)', 
-                            ylabel='Detected Power (nW)', 
+                            ylabel=ylabel, 
                             marker='.', 
                             title=f"RID {rid} - Dataset {key[9:]}"
                         )
@@ -1150,7 +1174,12 @@ def plot_power_by_rid(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=7
                 if plotted_any:
                     plt.show()
 
-def plot_power_by_rid_singleRow(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=751, tmin=-1, tmax=1e6):
+def plot_power_by_rid_singleRow(rid, search_dir, home_dir, threshold_nw=10.0, N_data_SWT=751, tmin=-1, tmax=1e6,
+                                unit='nW'):
+    """Same as `plot_power_by_rid`, but all traces share one row of subplots.
+
+    `unit` sets the y axis: 'nW' (default) or 'dBm'; `threshold_nw` stays in nW.
+    """
     # 1. Resolve file path using RID
     filename = find_file_by_rid(rid, search_dir, home_dir)
     if filename is None:
@@ -1160,6 +1189,7 @@ def plot_power_by_rid_singleRow(rid, search_dir, home_dir, threshold_nw=10.0, N_
     # 2. Load dataset and metadata
     file = load_h5_data(filename, base=home_dir)['datasets']
     SWT = load_artiq_h5_arguments(filename, 'SSA_SWT', base=home_dir)
+    _, ylabel = power_in_unit(0.0, unit)   # validates `unit` before any plotting
     
     # 3. First pass: Collect all valid data curves that pass the threshold
     curves_to_plot = []
@@ -1175,12 +1205,13 @@ def plot_power_by_rid_singleRow(rid, search_dir, home_dir, threshold_nw=10.0, N_
                     power_nW = 10**(powers[j]/10) * 1e6
                     
                     if np.max(power_nW) > threshold_nw:
+                        P_plot, _ = power_in_unit(powers[j], unit)
                         t_ax = np.linspace(time_stamp[j], time_stamp[j] + SWT, N_data_SWT)
                         idx = np.where((t_ax > tmin) & (t_ax < tmax))
                         
                         curves_to_plot.append({
                             'time': t_ax[idx],
-                            'power': power_nW[idx],
+                            'power': P_plot[idx],
                             'title': f"RID {rid} - Dataset {index}"
                         })
 
@@ -1203,7 +1234,7 @@ def plot_power_by_rid_singleRow(rid, search_dir, home_dir, threshold_nw=10.0, N_
         ax.set_xlabel('Time window (s)')
         ax.grid(True)
 
-    axes[0].set_ylabel('Detected Power (nW)')
+    axes[0].set_ylabel(ylabel)
     plt.tight_layout()
     plt.show()
 
@@ -1237,7 +1268,7 @@ def plot_rfsoc(target_id, base_dir='/home/electron/data/RFSoc_data', ndecimated=
         iq, amp, t = df['iq'], df['amp'], df['t_wall']
         fs_mhz = float(df["fs_msps"]) if "fs_msps" in getattr(df, "files", []) else F_OUT_MHZ
         t = np.arange(len(iq[:,0])) / fs_mhz                    # microseconds
-        tb, lo, hi, mean, phase, imean, qmean = envelope_decimate(iq, t, int(2000)) 
+        tb, lo, hi, mean, phase, imean, qmean = envelope_decimate(iq, t, int(ndecimated)) 
         
         plot_ax(ax[i], tb/1e3, mean, '-', xlabel='t (ms)', title=f'Event {i+1}')
         # plot_ax(ax[1], tb/1e3, phase/np.pi, xlabel='t (ms)', ylabel=r'Phase ($\pi$)')
