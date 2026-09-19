@@ -3,14 +3,14 @@ from edes.utils.plotting import plot, plot_ax, big_plt_font, plot_ax_errbar, plo
 import matplotlib.pyplot as plt
 import numpy as np 
 
-def reset_tip_V(exp, tip_current=2, V_pos=40, V_warning=1300, show_plot=False):
+def reset_tip_V(exp, tip_current=2, V_pos=40, V_warning=1300, V_step=10, R=200e6, V_range=100, I_max = 30e-9, show_plot=False):
     exp.max_I = 1
     while exp.max_I < tip_current:
         tip_Vsweep = sequences.TipVoltageSweepDifferential(saving_dir=exp.saving_dir, 
-                                         V_start=exp.V_tip-220, V_stop=exp.V_tip+5, V_step=25, R=200e6, 
+                                         V_start=exp.V_tip-V_range, V_stop=exp.V_tip+V_step/2, V_step=V_step, R=R, 
                                          N_avg=1, t_PSU_settle=2, t_meas_delay=0.2, 
                                          V_fixed=V_pos, ch_sweep='neg', ch_fixed='pos',
-                                         FEtip_PSU=exp.FEtip_PSU, multimeter=exp.Agilent)
+                                         FEtip_PSU=exp.FEtip_PSU, multimeter=exp.Agilent, I_max=I_max)
         file = tip_Vsweep.run_save()
         I = np.mean(file['all_I'], axis=1)*1e9 
         V = file['all_V']

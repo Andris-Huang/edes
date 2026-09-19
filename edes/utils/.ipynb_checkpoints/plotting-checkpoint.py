@@ -30,23 +30,29 @@ def hollow_plt_font():
     
 
 
-def plot(x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
+def plot(x, y, *args, xlabel=None, ylabel=None, title=None, legend_outside = False, **kwargs):
     plt.plot(x, y, *args, **kwargs)
     plt.grid(True)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
     if "label" in kwargs: 
-        plt.legend()
+        if legend_outside:
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        else:
+            plt.legend()
 
-def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
+def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, legend_outside=False, **kwargs):
     ax.plot(x, y, *args, **kwargs)
     ax.grid(True)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     if "label" in kwargs and kwargs["label"] != None: 
-        ax.legend()
+        if legend_outside:
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        else:
+            ax.legend()
 
 def plot_errbar(x, y, yerr, xerr=None, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.errorbar(x, y, yerr, xerr=xerr, *args, **kwargs)
@@ -148,3 +154,4 @@ def plot_generated_timelines(compiled_signals, title=None):
     plt.suptitle(title, fontsize=14, fontweight='bold')
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.show()
+

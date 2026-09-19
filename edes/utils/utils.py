@@ -9,6 +9,9 @@ import time
 # import sounddevice as sd
 import subprocess
 from scipy.constants import m_e, e
+import itertools
+import random
+import math
 
 def beep(frequency=440, duration_seconds=0.5, volume=1):
     """
@@ -107,3 +110,49 @@ def homogenize_axis(arr, fill_value=np.nan):
 
 def U2_to_MHz(U2):
     return np.sqrt(abs(U2)*e*np.sqrt(20/16/np.pi)/(m_e/2)*1e6)/2/np.pi/1e6
+
+def sample_hyperparameters(param_grid, num_samples,sampling_parameters):
+    """Generates parameter configurations either via random sampling without replacement
+
+    or via full brute-force grid search.
+
+    Args:
+        param_grid: Dict mapping parameter names to lists of candidate values.
+        num_samples: Number of unique combinations to sample (ignored if
+          sampling_parameters=False).
+        sampling_parameters: If True, samples `num_samples` unique combinations.
+          If False, performs a brute-force search returning all possible
+          combinations.
+
+    Returns:
+        List of dictionaries, each representing a parameter set.
+    """
+    keys = list(param_grid.keys())
+    values = list(param_grid.values())
+
+    # Create lazy Cartesian product generator
+    full_space = itertools.product(*values)
+
+    # Brute-force mode: return all combinations
+    if not sampling_parameters:
+        return [dict(zip(keys, combo)) for combo in full_space]
+
+    # Calculate total combinations without expanding the generator
+    total_combinations = math.prod(len(v) for v in values)
+    num_samples = min(num_samples, total_combinations)
+
+    # Pick unique random indices across total_combinations and index the space lazily
+    selected_indices = random.sample(range(total_combinations), num_samples)
+
+    sampled_configs = []
+    for idx in selected_indices:
+        config = []
+        current_idx = idx
+        # Map 1D index back to parameter choices (multidimensional coordinates)
+        for lst in reversed(values):
+            config.append(lst[current_idx % len(lst)])
+            current_idx //= len(lst)
+        config.reverse()
+        sampled_configs.append(dict(zip(keys, config)))
+
+    return sampled_configs

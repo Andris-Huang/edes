@@ -1236,3 +1236,59 @@ class RFPowerSweepDifferentialNAcquisition(RFPowerSweepRevivalDifferential):
         self.SSA.clear_averaging()
 
         return {'all_meas': np.array(all_meas)}
+
+
+class RFPowerSweepDifferentialNAcquisitionTipSwitched(RFPowerSweepDifferentialNAcquisition):
+    def __init__(self, name='RFPowerSweepDifferentialNAcquisitionTipSwitched', saving_dir=None,
+                 P_load=10, P_detect=5, V_on=800, V_off=500, V_pos=600,
+                 t_load=10, t_data=1, t_rest=1,
+                 SSA_freq_center=None, SSA_freq_span = None,
+                 SSA_RBW=30e3, N_avg=32, SSA_SWT=0.1,
+                 Valon=None, SSA=None, FEtip_PSU=None,
+                 display_progress=True,
+                 **kwargs): 
+        super().__init__(name, saving_dir=saving_dir, 
+                         P_load=P_load, P_detect=P_detect, 
+                         V_on=V_on, V_off=V_off, V_pos=V_pos,
+                        t_load=t_load, t_data=t_data, t_rest=t_rest,
+                        SSA_freq_center=SSA_freq_center, SSA_freq_span = SSA_freq_span,
+                        SSA_RBW=SSA_RBW, N_avg=N_avg, SSA_SWT=SSA_SWT,
+                        Valon=Valon, SSA=SSA, FEtip_PSU=FEtip_PSU,
+                        display_progress=display_progress,
+                         **kwargs)
+    
+    def run(self):
+        self.SSA.select_mode('SA')
+        self.SSA_init(self.SSA_freq_center, self.SSA_freq_span, self.SSA_RBW, self.SSA_SWT)
+        self.FEtip_PSU.ramp_up_ch('pos', self.V_pos)
+        self.FEtip_PSU.ramp_up(self.V_off)
+        
+        self.SSA.clear_averaging()
+        data = self.SSA.get_full_trace()
+        self.SSA.set_div_scale(5) 
+        self.SSA.set_ref_level(max(data)+25)
+        N_data = int(self.t_data/0.1)
+        all_meas = []
+        for _ in self.progress_bar(range(self.N_avg), disable=(not self.display_progress)):
+            loc_data = []
+            self.FEtip_PSU.set_voltage(self.V_on)
+            self.Valon.output_on() 
+            self.Valon.set_power(self.P_load)
+            time.sleep(self.t_load)
+            self.SSA.clear_averaging() 
+            self.FEtip_PSU.set_voltage(self.V_off)
+            self.Valon.set_power(self.P_detect)
+            for _ in range(N_data):
+                data = self.SSA.get_full_trace()
+                loc_data.extend(data)
+            all_meas.append(loc_data)
+            
+            self.Valon.output_off()
+            time.sleep(self.t_rest)
+
+        self.FEtip_PSU.ramp_down(0)
+        self.FEtip_PSU.ramp_down_ch('pos', 0)
+        self.Valon.output_off()
+        self.SSA.clear_averaging()
+
+        return {'all_meas': np.array(all_meas)}
