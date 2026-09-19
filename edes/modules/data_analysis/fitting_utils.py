@@ -1,4 +1,4 @@
-from edes.modules.data_analysis import fitting_functions as fitting 
+from edes.utils import fitting
 from edes.modules.data_analysis.spacetime_plot import plot_fitbounds, plot_fit
 import numpy as np 
 import matplotlib.pyplot as plt 
