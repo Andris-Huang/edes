@@ -1,6 +1,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+single_fig_size = (8, 5)
+two_row_size = (8, 6.4)
+four_fig_size = (10, 4) 
+wide_fig_size = (10.5,5.5)
+small_fig_size = (4, 2.5)
+blue = '#004AAE'
+gold = '#FFC31B'
+green = '#018943'
+dark_red = '#A00000'
+red = '#E7115E'
+purple = '#8236C7'
+light_blue = '#9FD1FF'
+light_gold = '#FFE88D'
+light_red = '#FFCFE5'
+light_purple = '#D9CEFF'
+light_green = '#B3E59A'
+black = 'k'
+
 def big_plt_font():
     """
     plt.rcParams.update({'font.size': 14,
@@ -10,8 +28,9 @@ def big_plt_font():
                          'ytick.labelsize': 15,
                          'errorbar.capsize': 2})
     """
-    plt.rcParams.update({'font.size': 14,
-                         'lines.markersize': 12,
+    plt.rcParams.update({'figure.figsize': single_fig_size,
+                         'font.size': 14,
+                         'lines.markersize': 8,
                          'lines.linewidth': 2.5,
                          'xtick.labelsize': 15,
                          'ytick.labelsize': 15,
@@ -28,6 +47,40 @@ def hollow_plt_font():
                          'lines.markeredgewidth': 2,
                          'lines.markerfacecolor': 'none'})
     
+def nemo_plt_font(): 
+    plt.rcParams.update({'figure.figsize': single_fig_size,
+                         'font.size': 14,
+                         'lines.markersize': 6,
+                         'lines.linewidth': 2,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2,
+                         'pdf.fonttype': 42})
+
+def two_row_figs():
+    fig, axs = plt.subplots(
+        2, 1,
+        figsize=two_row_size,
+    )
+
+    return fig, axs
+
+def wide_four_figs():
+    fig, axs = plt.subplots(
+        2, 2,
+        figsize=(11.0, 6.4),
+    )
+
+    fig.subplots_adjust(
+        left=0.08,
+        right=0.98,
+        bottom=0.14,
+        top=0.96,
+        wspace=0.20,
+        hspace=0.58,
+    )
+
+    return fig, axs
 
 
 def plot(x, y, *args, xlabel=None, ylabel=None, title=None, legend_outside = False, **kwargs):

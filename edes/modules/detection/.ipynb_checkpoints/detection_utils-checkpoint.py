@@ -12,12 +12,44 @@ kB = spc.k
 
 
 ########## Plotting functions for laziness ##########
+
+def big_plt_font():
+    """
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 12,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2})
+    """
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 12,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2})
+
+def hollow_plt_font(): 
+    plt.rcParams.update({'font.size': 14,
+                         'lines.markersize': 9,
+                         'lines.linewidth': 2.5,
+                         'xtick.labelsize': 15,
+                         'ytick.labelsize': 15,
+                         'errorbar.capsize': 2, 
+                         'lines.marker': 'o', 
+                         'lines.markeredgewidth': 2,
+                         'lines.markerfacecolor': 'none'})
+    
+
+
 def plot(x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.plot(x, y, *args, **kwargs)
     plt.grid(True)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+    if "label" in kwargs: 
+        plt.legend()
 
 def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     ax.plot(x, y, *args, **kwargs)
@@ -25,6 +57,8 @@ def plot_ax(ax, x, y, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
+    if "label" in kwargs: 
+        ax.legend()
 
 def plot_errbar(x, y, yerr, xerr=None, *args, xlabel=None, ylabel=None, title=None, **kwargs):
     plt.errorbar(x, y, yerr, xerr=xerr, *args, **kwargs)
@@ -369,6 +403,8 @@ class HarmonicElectron(Component):
         use electron.l and electron.c to see the value of equivalent
         l and c after initializing
             electron = HarmonicElectron(n, d, omega, m, e)
+        Use electron.get_I(A) to get the image current of given electron(s)
+        at a given motional amplitude A.
         
         Parameters
         ----------
@@ -388,6 +424,15 @@ class HarmonicElectron(Component):
 
     def get_lc(self):
         return self.l, self.c
+
+    def get_I(self, A=None, T=300): 
+        """
+        Get the induced image current at a given motional amplitude A
+        """
+        if A is not None:
+            return self.n*self.e*A*self.omega / self.d
+        else: 
+            return self.n*self.e*np.sqrt(kB*T/self.m) / self.d
 
         
 class TankCircuit(Component):
@@ -420,7 +465,7 @@ class TankCircuit(Component):
         return self.white_noise(f, PSD)
 
         
-class HarmoincElectronCoupledTank(Component):
+class HarmonicElectronCoupledTank(Component):
     def __init__(self, n, d, Q, Z0, omega_0, omega_z, 
                  m=m, e=e, T=4, name='Electron'):
         super().__init__(name=name, n=n, d=d, Q=Q, Z0=Z0,
@@ -499,6 +544,19 @@ class ElectronCoupledToTank(Component):
         Zlc = parallel( (Zl+Zc), parallel(ZL, ZC) )
         return Zlc / (Zlc+R)
 
+    def get_coupling_freq(self): 
+        """
+        Return the coupling strength between the electron and tank circuit in units
+        of [Hz].
+        """
+        return self.Electron.e**2 * self.R / (self.Electron.m * self.Electron.d**2) / (2*np.pi)
+
+    def get_cooling_time(self):
+        """
+        Return the cooling time constant in units of [s].
+        """
+        return (self.Electron.m * self.Electron.d**2) / (self.Electron.e**2 * self.R)
+
 
 class Amplifier(Component):
     def __init__(self, gain, voltage_noise, name='Amplifier'):
@@ -561,6 +619,7 @@ class AnharmonicElectronSetup(DetectionSetup):
                  N_average, m=m, e=e,
                  devices=[],
                  display_progress=False, 
+		         display_averaging=False,
                  name='AnharmonicElectron'):
         """
         The electron coupled to a tank circuit, with a sequence of devices
@@ -608,6 +667,9 @@ class AnharmonicElectronSetup(DetectionSetup):
         display_progress : bool
             Whether to display a progress bar when doing 
             moving average on the signal
+	display_averaging : bool
+	    Whether to display the progress bar when doing the
+	    averaging of all frequency runs
         """
         super().__init__(BW_measurement, Z_measurement, noise_floor, 
                          name=name, n=n, d=d, Q=Q, Z0=Z0, f0=f0, 
@@ -616,7 +678,8 @@ class AnharmonicElectronSetup(DetectionSetup):
                          display_progress=display_progress)
         self.devices = devices
         self.tank_circuit = TankCircuit(Q, Z0, 2*np.pi*f0, T)
-        
+        self.display_averaging = display_averaging
+
     def __call__(self, freq):
         output_ideal_spectrum = np.zeros(np.shape(freq))
         output_real_spectrum = np.zeros(np.shape(freq))
@@ -636,7 +699,7 @@ class AnharmonicElectronSetup(DetectionSetup):
         Pz = sp.stats.norm.pdf((all_fz-fz_0)/delta_fz)
         Pz_norm = Pz / np.sum(Pz)
         
-        for idx in trange(len(all_fz)):
+        for idx in trange(len(all_fz), disable=(not self.display_averaging)):
             fz = all_fz[idx]
             electron = HarmonicElectron(n, d, 2*np.pi*fz, m, e)
             electron_trap = ElectronCoupledToTank(electron, tank_circuit)
@@ -651,3 +714,140 @@ class AnharmonicElectronSetup(DetectionSetup):
             output_ideal_spectrum += dBm_to_W(ideal_ps) * Pz_norm[idx]
             output_real_spectrum += dBm_to_W(real_ps) * Pz_norm[idx]
         return W_to_dBm(output_ideal_spectrum), W_to_dBm(output_real_spectrum)
+
+class AnharmonicElectron(HarmonicElectron): 
+    def __init__(self, n, d, omega, Qe, Te=4, m=m, e=e, name='Hot_electron'): 
+        super().__init__(n, d, omega, m=m, e=e, name=name) 
+        self.r = np.sqrt(self.l/self.c) / Qe 
+        self.Qe = Qe 
+        self.Te = Te 
+
+    def get_noise(self, f): 
+        PSD = 4*kB*self.Te*self.r
+        return self.white_noise(f, PSD)
+
+    def get_rlc(self): 
+        return self.r, self.l, self.c
+
+class TankCircuitPinMatchedAmp(TankCircuit): 
+    def __init__(self, Q, Z0, omega_0, Cc, ZL, Tr=4, Ta=4, name='TankCircuit'): 
+        super().__init__(Q, Z0, omega_0, T=Tr) 
+        self.T = Tr 
+        self.Tr = Tr 
+        self.Ta = Ta 
+        self.Cc = Cc 
+        self.Zload = ZL 
+
+    def get_noise_tank(self, f): 
+        return super().get_noise(f) 
+
+    def get_noise_amp(self, f): 
+        PSD = 4*kB*self.Ta*self.Zload
+        return self.white_noise(f, PSD)
+
+class TankCircuitAbstractMatched(TankCircuit): 
+    def __init__(self, Q, Z0, omega_0, match_loss, ZL, Tr=4, Ta=4, name='TankCircuit'): 
+        super().__init__(Q, Z0, omega_0, T=Tr) 
+        self.T = Tr 
+        self.Tr = Tr 
+        self.Ta = Ta 
+        self.match_loss = match_loss 
+        self.Zload = ZL 
+
+    def get_noise_tank(self, f): 
+        return super().get_noise(f)
+
+    def get_noise_amp(self, f): 
+        PSD = 4*kB*self.Ta*self.Zload
+        return self.white_noise(f, PSD)
+
+class AnharmonicElectronCoupledTankWithMatch(Component): 
+    def __init__(self, n, d, Qr, Qe, Z0, omega_0, omega_z, matching_loss,
+                 m=m, e=e, Tr=4, Te=4, Ta=4, ZL=50,
+                 name='Electron'):
+        super().__init__(name=name, n=n, d=d, Qe=Qe, Qr=Qr, Z0=Z0,
+                         omega_0=omega_0, omega_z=omega_z, matching_loss=matching_loss,
+                         Tr=Tr, Te=Te, Ta=Ta, ZL=ZL, m=m, e=e)
+        self.Electron = AnharmonicElectron(n, d, omega_z, Qe, Te, m, e, name)
+        self.TankCircuit = TankCircuitAbstractMatched(Qr, Z0, omega_0, matching_loss, ZL, 
+                                                    Tr, Ta, name)
+        self.R, self.L, self.C = self.TankCircuit.get_RLC()
+        self.r, self.l, self.c = self.Electron.get_rlc()
+        
+    def Hr(self, omega):
+        '''
+        series rlc (electron) coupled to a parallel RLC (tank circuit) 
+        circuit, see Wineland 1975
+        '''
+        s = 1j*omega
+        s = 1j*omega
+        Zl = s*self.l
+        ZL = s*self.L
+        Zc = 1/(s*self.c)
+        ZC = 1/(s*self.C)
+        R = self.R
+        r = self.r
+        
+        Zlc = parallel( (Zl+Zc+r), parallel(ZL, ZC) )
+        return (Zlc / (Zlc+R))
+    
+
+    def He(self, omega): 
+        s = 1j*omega
+        s = 1j*omega
+        Zl = s*self.l
+        ZL = s*self.L
+        Zc = 1/(s*self.c)
+        ZC = 1/(s*self.C)
+        R = self.R
+        r = self.r
+        
+        Z_tank = parallel( R, parallel(ZL, ZC) )
+        Z_ele = r + Zl + Zc
+        return (Z_tank / (Z_tank+Z_ele))
+
+    def __call__(self, freq): 
+        tank_noise = self.TankCircuit.get_noise_tank(freq)
+        amp_noise = self.TankCircuit.get_noise_amp(freq)
+        ele_noise = self.Electron.get_noise(freq)
+        omega = 2*np.pi*freq 
+        return (abs(self.He(omega))**2 * abs(ele_noise) + \
+               abs(self.Hr(omega))**2 * abs(tank_noise)) / self.matching_loss +  \
+               abs(amp_noise) 
+
+
+class HotElectronSetup(DetectionSetup):
+    def __init__(self, n, d, Qr, Qe, matching_loss, Z0, f0, fz_0, 
+                 Te, Tr, Ta,
+                 BW_measurement, Z_measurement, noise_floor, 
+                 N_average, m=m, e=e,
+                 devices=[],
+                 display_progress=False, 
+		         display_averaging=False,
+                 name='AnharmonicElectron'):
+        
+        super().__init__(BW_measurement, Z_measurement, noise_floor, 
+                         name=name, n=n, d=d, Qr=Qr, Z0=Z0, f0=f0, 
+                         fz_0=fz_0, Qe=Qe, Tr=Tr, Ta=Ta,
+                         m=m, e=e, Te=Te, N_average=N_average,
+                         display_progress=display_progress)
+        self.devices = devices
+        self.electron = AnharmonicElectronCoupledTankWithMatch(
+                            n, d, Qr, Qe, Z0, 
+                            2*np.pi*f0, 2*np.pi*fz_0, matching_loss,
+                            m=m, e=e, Tr=Tr, Te=Te, Ta=Ta, ZL=Z_measurement)
+        self.display_averaging = display_averaging
+
+    def __call__(self, freq):
+        spectrum = np.zeros(np.shape(freq))
+        N_average = self.N_average
+        
+        for idx in trange(N_average, disable=(not self.display_averaging)):
+            psd_signal = self.electron(freq)
+                
+            for device in self.devices:
+                psd_signal = device(freq, psd_signal)
+            
+            ideal_ps, real_ps = self.measure_spectrum(freq, psd_signal)
+            spectrum += dBm_to_W(real_ps) / N_average
+        return W_to_dBm(spectrum)
